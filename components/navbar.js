@@ -46,7 +46,7 @@ const Navbar = () => {
         {/* <div className="flex items-center">
         </div> */}
         <img
-          src="./logoText.png"
+          src="./logoText.PNG"
           className="block sm:hidden w-32 mix-blend-multiply"
           alt="Text logo"
         />
