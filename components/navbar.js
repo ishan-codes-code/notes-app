@@ -42,10 +42,14 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex sm:flex-col border-r border-r-gray-200 px-4 p-4 sm:py-8 items-center sm:gap-12 justify-between sm:justify-start ">
-        <h1 className="font-bold">
-          <i>Quicknotes</i>
-        </h1>
+      <div className="bg-white flex sm:flex-col border-r border-r-gray-200 px-4 p-4 sm:py-8 items-center sm:gap-12 justify-between sm:justify-start ">
+        {/* <div className="flex items-center">
+        </div> */}
+        <img
+          src="./logoText.png"
+          className="block sm:hidden w-32 mix-blend-multiply"
+          alt=""
+        />
 
         <button
           onClick={() => {
@@ -55,7 +59,7 @@ const Navbar = () => {
             activeClrOpts && "rotate-45 hover:rotate-135"
           }`}
         >
-          <Plus className="text-white " />
+          <Plus size={22} className="text-white " />
         </button>
         <AnimatePresence mode="wait">
           {activeClrOpts && (
@@ -83,34 +87,33 @@ const Navbar = () => {
           )}
         </AnimatePresence>
       </div>
-      <div className="mx-auto">
-        <AnimatePresence mode="wait">
-          {activeClrOpts && (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-              exit="hidden"
-              className="sm:hidden w-full flex sm:flex-col items-center gap-4 text-black overflow-hidden p-2 mb-4"
-            >
-              {notesTheme.map((bgClr) => (
-                <motion.button
-                  key={bgClr}
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.3 }}
-                  onClick={() => {
-                    setCreateNoteClr(bgClr);
-                    setShowNoNotesCon(false);
-                    setActiveClrOpts(false);
-                  }}
-                  whileTap={{ scale: 0.9 }}
-                  className={`w-6 h-6 rounded-full cursor-pointer ${bgClr} active:scale-95`}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+
+      <AnimatePresence mode="wait">
+        {activeClrOpts && (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            exit="hidden"
+            className="sm:hidden w-full flex sm:flex-col justify-center items-center gap-4 text-black overflow-hidden p-2 mb-4"
+          >
+            {notesTheme.map((bgClr) => (
+              <motion.button
+                key={bgClr}
+                variants={itemVariants}
+                whileHover={{ scale: 1.3 }}
+                onClick={() => {
+                  setCreateNoteClr(bgClr);
+                  setShowNoNotesCon(false);
+                  setActiveClrOpts(false);
+                }}
+                whileTap={{ scale: 0.9 }}
+                className={`w-6 h-6 rounded-full cursor-pointer ${bgClr} active:scale-95`}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

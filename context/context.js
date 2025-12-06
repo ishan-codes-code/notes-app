@@ -7,6 +7,7 @@ export const ContextProvider = ({ children }) => {
   const [createNoteClr, setCreateNoteClr] = useState("");
   const [notes, setNotes] = useState([]);
   const [showNoNotesCon, setShowNoNotesCon] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <MyContext.Provider
@@ -17,6 +18,8 @@ export const ContextProvider = ({ children }) => {
         setNotes,
         showNoNotesCon,
         setShowNoNotesCon,
+        searchQuery,
+        setSearchQuery,
       }}
     >
       {children}

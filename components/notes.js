@@ -1,12 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useMyContext } from "@/context/context";
-import { Pencil, Trash } from "lucide-react";
-import NoNotes from "./noNotes";
+import { Pencil, Trash, X, Save } from "lucide-react";
+import { NoNotes, NoSearchNotes } from "./noNotes";
+import EditModal from "./editNote";
+import { toast } from "sonner";
 
-export default function SimpleGrid() {
+export default function NotesWrapper() {
   const {
     createNoteClr,
     setCreateNoteClr,
@@ -14,19 +16,16 @@ export default function SimpleGrid() {
     notes,
     showNoNotesCon,
     setShowNoNotesCon,
+    searchQuery,
+    setSearchQuery,
   } = useMyContext();
   const [note, setNote] = useState("");
+  const [editNote, setEditNote] = useState({});
+  const [sortedNotes, setSortedNotes] = useState(notes);
 
-  const boxes = [
-    "bg-amber-200",
-    "bg-orange-300",
-    "bg-purple-200",
-    "bg-cyan-300",
-    "bg-lime-200",
-  ];
   const saveNote = () => {
     if (!note) {
-      alert("Note cannot be empty");
+      toast.warning("Note cannot be empty");
       return;
     }
 
@@ -43,7 +42,28 @@ export default function SimpleGrid() {
     setNotes([newNote, ...notes]);
     setNote("");
     setCreateNoteClr("");
-    alert("Note saved succesfully");
+    toast.success("Note saved succesfully");
+  };
+
+  const deleteNote = (n) => {
+    setNotes((prev) => prev.filter((p) => p.id !== n.id));
+
+    toast.success("Deleted Successfully!", {
+      action: {
+        label: "Undo",
+        onClick: () => setNotes((prev) => [n, ...prev]), // ← FIX
+      },
+    });
+  };
+
+  const searchNotes = () => {
+    if (searchQuery) {
+      setSortedNotes(
+        notes.filter((n) =>
+          n.note.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+    }
   };
 
   useEffect(() => {
@@ -53,89 +73,193 @@ export default function SimpleGrid() {
     }
   }, []);
   useEffect(() => {
+    setSortedNotes(notes);
+
     localStorage.setItem("notes", JSON.stringify(notes));
   }, [notes]);
 
-  return notes.length === 0 && showNoNotesCon ? (
-    <NoNotes />
-  ) : (
-    <motion.div
-      layout
-      className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 text-black"
-      transition={{ layout: { type: "spring", stiffness: 120, damping: 14 } }}
-    >
-      {/* New note card */}
-      {createNoteClr && (
+  useEffect(() => {
+    if (!searchQuery) setSortedNotes(notes);
+    const timeout = setTimeout(() => searchNotes(), 500);
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
+  return (
+    <AnimatePresence mode="wait">
+      {notes.length === 0 && showNoNotesCon ? (
+        <NoNotes />
+      ) : sortedNotes.length === 0 && showNoNotesCon ? (
+        <NoSearchNotes />
+      ) : (
         <motion.div
           layout
-          key={createNoteClr}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, ease: "easeIn" }}
-          className={`${createNoteClr} rounded-3xl p-4 w-64 h-64 mx-auto text-black border flex flex-col`}
+          key={"con"}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 1 }}
+          className={`text-black columns-1 sm:columns-2 lg:columns-3 gap-4`}
+          transition={{
+            layout: { type: "spring", stiffness: 120, damping: 14 },
+          }}
         >
-          <textarea
-            autoFocus
-            type="text"
-            className="h-full w-full outline-none"
-            placeholder="My new note..."
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          >
-            {/* My new notes */}
-          </textarea>
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => {
-                setCreateNoteClr(false);
-                setShowNoNotesCon(true);
-              }}
-              className="block mt-4 border rounded px-3 py-1 text-sm hover:bg-gray-100"
+          {/* New note card */}
+          {createNoteClr && (
+            <motion.div
+              layout
+              key={createNoteClr}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, ease: "easeIn" }}
+              className={`${createNoteClr} rounded-3xl p-4 mb-4 break-inside-avoid text-black border flex flex-col`}
             >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                saveNote();
-                setShowNoNotesCon(true);
-              }}
-              className="block mt-4 border rounded px-3 py-1 text-sm hover:bg-gray-100"
+              <textarea
+                autoFocus
+                type="text"
+                className="h-full w-full outline-none"
+                placeholder="My new note..."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              >
+                {/* My new notes */}
+              </textarea>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setCreateNoteClr(false);
+                    setShowNoNotesCon(true);
+                  }}
+                  className="w-fit p-2 rounded-full bg-black text-white active:scale-95 transition-all cursor-pointer hover:scale-110"
+                >
+                  <X size={18} />
+                </button>
+                <button
+                  onClick={() => {
+                    saveNote();
+                    setShowNoNotesCon(true);
+                  }}
+                  className="w-fit p-2 rounded-full bg-black text-white active:scale-95 transition-all cursor-pointer hover:scale-110"
+                >
+                  <Save size={18} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Regular notes */}
+          {sortedNotes.map((n) => (
+            <motion.div
+              layout
+              key={n.id}
+              layoutId={n.id}
+              title={n.lastEdited && `Last edited on ${n.lastEdited}`}
+              whileHover={{ scale: 1.01 }}
+              transition={{ duration: 0.3, ease: "easeIn" }}
+              className={`${n.themeClr} rounded-3xl p-4 mb-4 break-inside-avoid flex flex-col gap-2 cursor-grab`}
             >
-              Save
-            </button>
-          </div>
+              <p className="text-md font-semibold h-full whitespace-pre-wrap ">
+                {n.note}
+              </p>
+
+              <div className="flex items-center justify-between">
+                <p className="text-sm">{n.createdAt}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    title="Edit"
+                    onClick={() => {
+                      setEditNote(n);
+                    }}
+                    className="w-fit p-2 rounded-full bg-black text-white active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Pencil size={18} />
+                  </button>
+
+                  <button
+                    title="Delete"
+                    onClick={() => deleteNote(n)}
+                    className="w-fit p-2 rounded-full bg-black text-white active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Trash size={18} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+          <AnimatePresence mode="wait">
+            {editNote.id && (
+              <EditModal
+                onClose={() => {
+                  setEditNote({});
+                }}
+                editNote={editNote}
+                setEditNote={setEditNote}
+              />
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
-
-      {/* Regular notes */}
-      {notes.map((n) => (
-        <motion.div
-          key={n.id}
-          layout
-          className={`${n.themeClr} rounded-3xl p-4 w-64 h-64 mx-auto flex flex-col gap-2`}
-          whileHover={{ scale: 1.01 }}
-          transition={{ duration: 0.3, ease: "easeIn" }}
-        >
-          <p className="text-md font-semibold h-full">{n.note}</p>
-          <div className="flex items-center justify-between">
-            <p className="text-sm">{n.createdAt}</p>
-            <div className="flex items-center gap-2">
-              <button className="w-fit p-2 rounded-full bg-black text-white active:scale-95 transition-all cursor-pointer">
-                <Pencil size={18} />
-              </button>
-
-              <button
-                onClick={() => {
-                  setNotes((prev) => prev.filter((p) => p.id != n.id));
-                }}
-                className="w-fit p-2 rounded-full bg-black text-white active:scale-95 transition-all cursor-pointer"
-              >
-                <Trash size={18} />
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      ))}
-    </motion.div>
+    </AnimatePresence>
   );
 }
+
+// "use client";
+
+// import { useState } from "react";
+// import { motion, AnimatePresence } from "framer-motion";
+
+// export default function App() {
+//   const [selected, setSelected] = useState(null);
+
+//   const items = [
+//     { id: "pizza", label: "🍕 Pizza" },
+//     { id: "burger", label: "🍔 Burger" },
+//     { id: "hotdog", label: "🌭 Hotdog" },
+//   ];
+
+//   return (
+//     <div className="p-12 flex justify-center">
+//       <AnimatePresence>
+//         {!selected && (
+//           <motion.div className="flex gap-6">
+//             {items.map((item) => (
+//               <motion.div
+//                 key={item.id}
+//                 layoutId={item.id}
+//                 onClick={() => setSelected(item)}
+//                 className="bg-white text-2xl px-8 py-6 rounded-xl shadow-md cursor-pointer"
+//               >
+//                 {item.label}
+//               </motion.div>
+//             ))}
+//           </motion.div>
+//         )}
+
+//         {selected && (
+//           <>
+//             {/* Overlay */}
+//             <motion.div
+//               className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+//               onClick={() => setSelected(null)}
+//               initial={{ opacity: 0 }}
+//               animate={{ opacity: 1 }}
+//               exit={{ opacity: 0 }}
+//             />
+
+//             {/* Modal */}
+//             <motion.div
+//               layoutId={selected.id}
+//               onClick={() => setSelected(null)}
+//               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+//                 bg-white p-12 rounded-2xl shadow-2xl w-[85%] max-w-md text-center cursor-pointer"
+//             >
+//               <h2 className="text-4xl mb-4">{selected.label}</h2>
+//               <p className="text-gray-600">
+//                 This modal expanded from the card using <code>layoutId</code> ✨
+//               </p>
+//             </motion.div>
+//           </>
+//         )}
+//       </AnimatePresence>
+//     </div>
+//   );
+// }
