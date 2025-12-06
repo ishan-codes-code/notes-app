@@ -24,7 +24,7 @@ const SearchBar = () => {
       <img
         src="./logoText.png"
         className="sm:block hidden w-42 mix-blend-multiply"
-        alt=""
+        alt="Text logo"
       />
     </div>
   );

@@ -48,7 +48,7 @@ const Navbar = () => {
         <img
           src="./logoText.png"
           className="block sm:hidden w-32 mix-blend-multiply"
-          alt=""
+          alt="Text logo"
         />
 
         <button
