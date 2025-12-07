@@ -8,6 +8,8 @@ The app focuses on **simplicity, speed, and minimal UI** — take notes instantl
 **Preview**  
 💻 Website: https://quicknotes-ishan.vercel.app
 
+---
+
 
 ## ✨ Features
 
