@@ -4,7 +4,6 @@ import Navbar from "@/components/navbar";
 import { ContextProvider } from "@/context/context";
 import { Toaster } from "@/components/ui/sonner";
 import Footer from "@/components/footer";
-import SearchBar from "@/components/searchBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +22,6 @@ export const metadata = {
     icon: "/favicon.svg",
   },
 };
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
@@ -36,7 +34,8 @@ export default function RootLayout({ children }) {
             {children}
           </div>
           <Footer />
-          <Toaster position="top-right" expand={true} richColors closeButton />
+
+          <Toaster theme={"dark"} position="top-right" expand={true} />
         </ContextProvider>
       </body>
     </html>
